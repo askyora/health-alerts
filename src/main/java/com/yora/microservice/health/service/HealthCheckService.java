@@ -42,19 +42,18 @@ public class HealthCheckService {
 	private List<ServiceHealthUrl> previous;
 
 	public void invokeHealthCheck() {
-		
+
 		notifyIfChanged(config.newServiceUrlList().parallelStream().map(e -> checkHealthStatus(e))
 				.sorted((x, y) -> x.getName().compareTo(y.getName())).collect(Collectors.toList()));
-		
 
 	}
 
 	private void notifyIfChanged(List<ServiceHealthUrl> newList) {
 		if (previous == null || !newList.containsAll(previous)) {
-
 			newList.stream().map(e -> e.toString()).forEach(log::error);
+			this.previous = newList;
 		}
-		this.previous = newList;
+
 	}
 
 	private ServiceHealthUrl checkHealthStatus(ServiceHealthUrl status) {
