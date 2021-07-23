@@ -1,0 +1,23 @@
+server:
+  port: 8080
+
+service:
+  data:
+    -
+     name: service A
+     url: http://18.142.54.177:8080/actuator/health
+    -
+     name: service b
+     url: http://18.142.54.177:8080/actuator/health
+    -
+     name: service c
+     url: http://18.142.54.173:8080/actuator/health
+    -
+     name: service d
+     url: http://18.142.54.177:8080/actuator/health
+    -
+     name: service e
+     url: http://18.142.54.177:8080/actuator/health
+
+scheduling:
+  cron-expression: ${EXPRESSION:*/10 * * * * ?}
