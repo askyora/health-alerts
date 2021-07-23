@@ -17,6 +17,7 @@ import org.springframework.web.client.RestTemplate;
 import com.yora.microservice.health.config.UrlConfig;
 import com.yora.microservice.health.dto.ServiceHealthUrl;
 
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 @Service
@@ -39,6 +40,7 @@ public class HealthCheckService {
 	@Value("${default.status-tag-name:status}")
 	String statusKeyName = "status";
 
+	@Setter
 	private List<ServiceHealthUrl> previous;
 
 	public void invokeHealthCheck() {
@@ -56,7 +58,7 @@ public class HealthCheckService {
 	}
 
 	private void notifyIfChanged(List<ServiceHealthUrl> newList) {
-		if (previous == null || newList.size() != previous.size() || !newList.containsAll(previous)) {
+		if (previous == null || !newList.containsAll(previous)) {
 			newList.stream().map(e -> e.toString()).forEach(log::error);
 			this.previous = newList;
 		}
@@ -68,14 +70,13 @@ public class HealthCheckService {
 			status.setStatus(EMPTY_BODY_STATUS);
 			status.setTimestamp(ZonedDateTime.now(ZoneId.of(zoneId)));
 			ResponseEntity<String> response = template.getForEntity(status.getUrl(), String.class);
-			if (response != null) {
 
-				if (response.hasBody()) {
-					JSONObject json = new JSONObject(response.getBody());
-					status.setStatus(json.optString(statusKeyName));
-				}
-				status.setStatusCode(response.getStatusCode());
+			if (response.hasBody()) {
+				JSONObject json = new JSONObject(response.getBody());
+				status.setStatus(json.optString(statusKeyName));
 			}
+			status.setStatusCode(response.getStatusCode());
+
 		} catch (RestClientException | JSONException e) {
 			status.setStatus(EXCEPTION_STATUS);
 			log.error(e.getMessage());
