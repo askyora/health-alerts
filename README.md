@@ -2,7 +2,7 @@
 
 ## Features 
    1. Check health of each microservices and identify any failures.
-   2. Compose a report of service health.  
+   2. Compose a report data for service UP and Down time .  
 
  
 
