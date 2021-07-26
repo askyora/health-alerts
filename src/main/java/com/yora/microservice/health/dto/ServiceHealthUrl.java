@@ -13,7 +13,7 @@ import lombok.NoArgsConstructor;
 @EqualsAndHashCode(of = { "name", "status", "statusCode", "url" })
 @NoArgsConstructor
 public class ServiceHealthUrl implements Serializable {
-	
+
 	private static final long serialVersionUID = 3582234802280630483L;
 
 	public ServiceHealthUrl(String name, String url) {
@@ -23,12 +23,11 @@ public class ServiceHealthUrl implements Serializable {
 	}
 
 	public ServiceHealthUrl(String name, String url, String status, HttpStatus statusCode) {
-		this(name,url);
+		this(name, url);
 		this.status = status;
 		this.statusCode = statusCode;
 	}
 
-	
 	private String name;
 	private String url;
 	private String status;

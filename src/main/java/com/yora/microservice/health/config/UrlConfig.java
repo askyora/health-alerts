@@ -13,12 +13,12 @@ import lombok.Data;
 
 @Configuration
 @Data
-@ConfigurationProperties(prefix = "service")
+@ConfigurationProperties(prefix = "services")
 public class UrlConfig {
 
-	private List<ServiceHealthUrl> data;
+	private List<ServiceHealthUrl> list;
 
 	public List<ServiceHealthUrl> newServiceUrlList() {
-		return data.stream().map(e -> SerializationUtils.clone(e)).collect(Collectors.toList());
+		return list.stream().map(e -> SerializationUtils.clone(e)).collect(Collectors.toList());
 	}
 }

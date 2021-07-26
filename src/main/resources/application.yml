@@ -1,23 +1,28 @@
 server:
   port: 8080
 
-service:
-  data:
+services:
+  list:
     -
-     name: service A
+     name: Service A
      url: http://18.142.54.177:8080/actuator/health
     -
-     name: service b
+     name: Service B
      url: http://18.142.54.177:8080/actuator/health
     -
-     name: service c
-     url: http://18.142.54.173:8080/actuator/health
-    -
-     name: service d
+     name: Service C
      url: http://18.142.54.177:8080/actuator/health
     -
-     name: service e
+     name: Service D
+     url: http://18.142.54.177:8080/actuator/health
+    -
+     name: Service E
      url: http://18.142.54.177:8080/actuator/health
 
 scheduling:
-  cron-expression: ${EXPRESSION:*/10 * * * * ?}
+  cron-expression: ${EXPRESSION:*/300 * * * * ?}
+
+notification:
+  slack:
+    enabled: true 
+    token: ${SLACK_TOKEN}

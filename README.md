@@ -1,9 +1,22 @@
-#  Microservices health checker service
+[![shanakaray](https://circleci.com/gh/shanakaray/health-alerts.svg?style=svg)](https://circleci.com/gh/shanakaray/health-alerts/?branch=main)
+
+#  Micro-services health checker service
+
+Its a open source project to identify any service outage / disruptions and notify to support team or service maintenance team for quick attention.  
+
+
 
 ## Features 
-   1. Check health of each microservices and identify any failures.
-   2. Compose a report of service health.  
-
+   * Cron job scheduled for periodic health checks for each micro services.  
+   * Upon any status changes notified to slack channel. 
+   
+    
+   **Upcoming**
+   
+   Calculate service outage / up time.
+   Email and SMS alert support.
+   Multiple Server instance support.
+   Monthly reports. 
  
 
 ### Reference Documentation

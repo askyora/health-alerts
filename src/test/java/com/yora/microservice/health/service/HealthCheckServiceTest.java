@@ -32,6 +32,9 @@ public class HealthCheckServiceTest {
 	@Mock
 	private UrlConfig urlConfig;
 
+	@Mock
+	private Notification notification;
+
 	@InjectMocks
 	private HealthCheckService service;
 
@@ -47,7 +50,7 @@ public class HealthCheckServiceTest {
 
 		// then
 
-		verifyNoMoreInteractions(restTemplate, urlConfig);
+		verifyNoMoreInteractions(restTemplate, urlConfig, notification);
 	}
 
 	@Test
@@ -62,7 +65,7 @@ public class HealthCheckServiceTest {
 
 		// then
 
-		verifyNoMoreInteractions(restTemplate, urlConfig);
+		verifyNoMoreInteractions(restTemplate, urlConfig, notification);
 	}
 
 	@Test
@@ -85,6 +88,8 @@ public class HealthCheckServiceTest {
 		when(restTemplate.getForEntity("http://abc.com/health", String.class))
 				.thenReturn(ResponseEntity.ok("{'status':'up'}"));
 
+		Mockito.doNothing().when(notification).publish(Mockito.anyList(), Mockito.isNull());
+
 		// when
 		service.invokeHealthCheck();
 
@@ -99,6 +104,8 @@ public class HealthCheckServiceTest {
 		assertEquals(collection.get(2).getStatus(), "up");
 
 		verify(urlConfig, Mockito.times(1)).newServiceUrlList();
+
+		verify(notification).publish(Mockito.anyList(), Mockito.isNull());
 
 		verify(restTemplate, Mockito.times(1)).getForEntity("http://a.com/health", String.class);
 		verify(restTemplate, Mockito.times(1)).getForEntity("http://ab.com/health", String.class);
@@ -124,6 +131,8 @@ public class HealthCheckServiceTest {
 
 		when(restTemplate.getForEntity("http://abc.com/health", String.class)).thenThrow(RestClientException.class);
 
+		Mockito.doNothing().when(notification).publish(Mockito.anyList(), Mockito.isNull());
+
 		// when
 		service.invokeHealthCheck();
 
@@ -137,6 +146,8 @@ public class HealthCheckServiceTest {
 		assertEquals(collection.get(2).getStatus(), "up");
 
 		verify(urlConfig, Mockito.times(1)).newServiceUrlList();
+
+		verify(notification).publish(Mockito.anyList(), Mockito.isNull());
 
 		verify(restTemplate, Mockito.times(1)).getForEntity("http://a.com/health", String.class);
 		verify(restTemplate, Mockito.times(1)).getForEntity("http://ab.com/health", String.class);
@@ -166,6 +177,8 @@ public class HealthCheckServiceTest {
 		when(restTemplate.getForEntity("http://abc.com/health", String.class))
 				.thenReturn(ResponseEntity.ok("{'status':'up'}"));
 
+		Mockito.doNothing().when(notification).publish(Mockito.anyList(), Mockito.anyList());
+
 		// when
 		service.invokeHealthCheck();
 
@@ -180,6 +193,8 @@ public class HealthCheckServiceTest {
 		assertEquals(collection.get(2).getStatus(), "up");
 
 		verify(urlConfig, Mockito.times(1)).newServiceUrlList();
+
+		verify(notification).publish(Mockito.anyList(), Mockito.anyList());
 
 		verify(restTemplate, Mockito.times(1)).getForEntity("http://a.com/health", String.class);
 		verify(restTemplate, Mockito.times(1)).getForEntity("http://ab.com/health", String.class);

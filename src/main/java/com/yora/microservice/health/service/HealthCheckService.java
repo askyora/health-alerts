@@ -28,11 +28,19 @@ public class HealthCheckService {
 
 	private static final String EMPTY_BODY_STATUS = "Empty";
 
-	@Autowired
 	private UrlConfig config;
 
-	@Autowired
 	private RestTemplate template;
+
+	private Notification notification;
+
+	@Autowired
+	public HealthCheckService(UrlConfig config, RestTemplate template, Notification notification) {
+		this.config = config;
+		this.template = template;
+		this.notification = notification;
+
+	}
 
 	@Value("${default.timezone:Asia/Colombo}")
 	String zoneId = "Asia/Colombo";
@@ -58,11 +66,10 @@ public class HealthCheckService {
 	}
 
 	private void notifyIfChanged(List<ServiceHealthUrl> newList) {
-		if (previous == null || !newList.containsAll(previous)) {
-			newList.stream().map(e -> e.toString()).forEach(log::error);
+		if (previous == null || !previous.containsAll(newList)) {
+			notification.publish(newList, previous);
 			this.previous = newList;
 		}
-
 	}
 
 	private ServiceHealthUrl checkHealthStatus(ServiceHealthUrl status) {
@@ -79,7 +86,6 @@ public class HealthCheckService {
 
 		} catch (RestClientException | JSONException e) {
 			status.setStatus(EXCEPTION_STATUS);
-			log.error(e.getMessage());
 			status.setTrace(e.getMessage());
 		}
 		return status;
