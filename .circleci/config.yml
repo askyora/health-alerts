@@ -22,7 +22,7 @@ jobs:
           command: mvn -B clean package
       # ... steps for building/testing app ...
     - run:
-          name: Coverage
+          name: Build
           command: mvn cobertura:cobertura
           
     - setup_remote_docker:
