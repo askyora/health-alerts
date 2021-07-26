@@ -1,4 +1,5 @@
-[![shanakaray](https://circleci.com/gh/shanakaray/health-alerts.svg?style=svg)](https://circleci.com/gh/shanakaray/health-alerts/?branch=main)
+[![circleci](https://circleci.com/gh/shanakaray/health-alerts.svg?style=svg)](https://circleci.com/gh/shanakaray/health-alerts/?branch=main)
+[![codecov](https://codecov.io/gh/shanakaray/health-alerts/branch/main/graph/badge.svg?token=Q8F05XGOA6)](https://codecov.io/gh/shanakaray/health-alerts)
 
 #  Micro-services health checker service
 
