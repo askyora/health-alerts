@@ -21,7 +21,10 @@ jobs:
           name: Build
           command: mvn -B clean package
       # ... steps for building/testing app ...
-
+    - run:
+          name: Coverage
+          command: mvn cobertura:cobertura
+          
     - setup_remote_docker:
           version: 19.03.13
           docker_layer_caching: false
