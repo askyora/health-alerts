@@ -93,11 +93,13 @@ public class SlackNotification implements Notification {
 			String services = newList.stream().map(e -> e.getName()).collect(Collectors.joining("\n"));
 
 			String status = newList.stream().map(e -> e.getStatus()).collect(Collectors.joining("\n"));
+			
 
 			List<TextObject> list = new ArrayList<>();
 
 			list.add(MarkdownTextObject.builder().text("*Service Name*").build());
 			list.add(MarkdownTextObject.builder().text("*Status*").build());
+			
 
 			list.add(PlainTextObject.builder().text(services).build());
 			list.add(PlainTextObject.builder().text(status).build());
