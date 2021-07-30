@@ -16,17 +16,18 @@ import lombok.Data;
 @Configuration
 public class RestTemplateConfig {
 
-	@Value("${rest.read-timeout:3600}")
-	private int readTimeout;
+  @Value("${rest.read-timeout:3600}")
+  private int readTimeout;
 
-	@Value("${rest.connect-timeout:3600}")
-	private int connectTimeout;
+  @Value("${rest.connect-timeout:3600}")
+  private int connectTimeout;
 
-	@Bean
-	public RestTemplate initTemplate() {
-		return new RestTemplateBuilder().setReadTimeout(Duration.ofMillis(readTimeout))
-				.setConnectTimeout(Duration.ofMillis(connectTimeout))
-				.defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE).build();
-	}
-
+  @Bean
+  public RestTemplate initTemplate() {
+    return new RestTemplateBuilder()
+        .setReadTimeout(Duration.ofMillis(readTimeout))
+        .setConnectTimeout(Duration.ofMillis(connectTimeout))
+        .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+        .build();
+  }
 }

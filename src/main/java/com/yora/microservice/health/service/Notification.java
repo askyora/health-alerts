@@ -6,6 +6,5 @@ import com.yora.microservice.health.dto.ServiceHealthUrl;
 
 public interface Notification {
 
-	void publish(List<ServiceHealthUrl> newList, List<ServiceHealthUrl> previous);
-
+  void publish(List<ServiceHealthUrl> newList, List<ServiceHealthUrl> previous);
 }

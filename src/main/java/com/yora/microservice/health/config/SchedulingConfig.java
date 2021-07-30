@@ -14,14 +14,12 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class SchedulingConfig {
 
-	@Autowired
-	private HealthCheckService service;
+  @Autowired private HealthCheckService service;
 
-	@Scheduled(cron = "${scheduling.cron-expression}")
-	public void scheduleFixedRateWithInitialDelayTask() {
-		long now = System.currentTimeMillis();
-		log.info(" invokeHealthCheck at : {}", now);
-		service.invokeHealthCheck();
-	}
-
+  @Scheduled(cron = "${scheduling.cron-expression}")
+  public void scheduleFixedRateWithInitialDelayTask() {
+    long now = System.currentTimeMillis();
+    log.info(" invokeHealthCheck at : {}", now);
+    service.invokeHealthCheck();
+  }
 }

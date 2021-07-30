@@ -26,179 +26,186 @@ import com.yora.microservice.health.dto.ServiceHealthUrl;
 @ExtendWith(MockitoExtension.class)
 public class HealthCheckServiceTest {
 
-	@Mock
-	private RestTemplate restTemplate;
+  @Mock private RestTemplate restTemplate;
 
-	@Mock
-	private UrlConfig urlConfig;
+  @Mock private UrlConfig urlConfig;
 
-	@Mock
-	private Notification notification;
+  @Mock private Notification notification;
 
-	@InjectMocks
-	private HealthCheckService service;
+  @InjectMocks private HealthCheckService service;
 
-	@Test
-	@DisplayName("when service urls  empty rest template should not invoked")
-	public void when_service_urls_empty_rest_template_should_not_invoked() {
+  @Test
+  @DisplayName("when service urls  empty rest template should not invoked")
+  public void when_service_urls_empty_rest_template_should_not_invoked() {
 
-		// given
-		when(urlConfig.newServiceUrlList()).thenReturn(Collections.emptyList());
+    // given
+    when(urlConfig.newServiceUrlList()).thenReturn(Collections.emptyList());
 
-		// when
-		service.invokeHealthCheck();
+    // when
+    service.invokeHealthCheck();
 
-		// then
+    // then
 
-		verifyNoMoreInteractions(restTemplate, urlConfig, notification);
-	}
+    verifyNoMoreInteractions(restTemplate, urlConfig, notification);
+  }
 
-	@Test
-	@DisplayName("when service urls  null rest template should not invoked")
-	public void when_service_urls_null_rest_template_should_not_invoked() {
+  @Test
+  @DisplayName("when service urls  null rest template should not invoked")
+  public void when_service_urls_null_rest_template_should_not_invoked() {
 
-		// given
-		when(urlConfig.newServiceUrlList()).thenReturn(null);
+    // given
+    when(urlConfig.newServiceUrlList()).thenReturn(null);
 
-		// when
-		service.invokeHealthCheck();
+    // when
+    service.invokeHealthCheck();
 
-		// then
+    // then
 
-		verifyNoMoreInteractions(restTemplate, urlConfig, notification);
-	}
+    verifyNoMoreInteractions(restTemplate, urlConfig, notification);
+  }
 
-	@Test
-	@DisplayName("when service urls not empty rest template should be invoked")
-	public void when_service_urls_not_empty_rest_template_should_be_invoked() {
+  @Test
+  @DisplayName("when service urls not empty rest template should be invoked")
+  public void when_service_urls_not_empty_rest_template_should_be_invoked() {
 
-		// given
+    // given
 
-		List<ServiceHealthUrl> collection = List.of(new ServiceHealthUrl("B", "http://ab.com/health"),
-				new ServiceHealthUrl("C", "http://abc.com/health"), new ServiceHealthUrl("A", "http://a.com/health"));
+    List<ServiceHealthUrl> collection =
+        List.of(
+            new ServiceHealthUrl("B", "http://ab.com/health"),
+            new ServiceHealthUrl("C", "http://abc.com/health"),
+            new ServiceHealthUrl("A", "http://a.com/health"));
 
-		when(urlConfig.newServiceUrlList()).thenReturn(collection);
+    when(urlConfig.newServiceUrlList()).thenReturn(collection);
 
-		when(restTemplate.getForEntity("http://a.com/health", String.class))
-				.thenReturn(ResponseEntity.ok("{'status':'up'}"));
+    when(restTemplate.getForEntity("http://a.com/health", String.class))
+        .thenReturn(ResponseEntity.ok("{'status':'up'}"));
 
-		when(restTemplate.getForEntity("http://ab.com/health", String.class))
-				.thenReturn(ResponseEntity.ok("{'status':'down'}"));
+    when(restTemplate.getForEntity("http://ab.com/health", String.class))
+        .thenReturn(ResponseEntity.ok("{'status':'down'}"));
 
-		when(restTemplate.getForEntity("http://abc.com/health", String.class))
-				.thenReturn(ResponseEntity.ok("{'status':'up'}"));
+    when(restTemplate.getForEntity("http://abc.com/health", String.class))
+        .thenReturn(ResponseEntity.ok("{'status':'up'}"));
 
-		Mockito.doNothing().when(notification).publish(Mockito.anyList(), Mockito.isNull());
+    Mockito.doNothing().when(notification).publish(Mockito.anyList(), Mockito.isNull());
 
-		// when
-		service.invokeHealthCheck();
+    // when
+    service.invokeHealthCheck();
 
-		// then
+    // then
 
-		assertEquals(collection.get(0).getName(), "B");
-		assertEquals(collection.get(1).getName(), "C");
-		assertEquals(collection.get(2).getName(), "A");
+    assertEquals(collection.get(0).getName(), "B");
+    assertEquals(collection.get(1).getName(), "C");
+    assertEquals(collection.get(2).getName(), "A");
 
-		assertEquals(collection.get(0).getStatus(), "down");
-		assertEquals(collection.get(1).getStatus(), "up");
-		assertEquals(collection.get(2).getStatus(), "up");
+    assertEquals(collection.get(0).getStatus(), "down");
+    assertEquals(collection.get(1).getStatus(), "up");
+    assertEquals(collection.get(2).getStatus(), "up");
 
-		verify(urlConfig, Mockito.times(1)).newServiceUrlList();
+    verify(urlConfig, Mockito.times(1)).newServiceUrlList();
 
-		verify(notification).publish(Mockito.anyList(), Mockito.isNull());
+    verify(notification).publish(Mockito.anyList(), Mockito.isNull());
 
-		verify(restTemplate, Mockito.times(1)).getForEntity("http://a.com/health", String.class);
-		verify(restTemplate, Mockito.times(1)).getForEntity("http://ab.com/health", String.class);
-		verify(restTemplate, Mockito.times(1)).getForEntity("http://abc.com/health", String.class);
-	}
+    verify(restTemplate, Mockito.times(1)).getForEntity("http://a.com/health", String.class);
+    verify(restTemplate, Mockito.times(1)).getForEntity("http://ab.com/health", String.class);
+    verify(restTemplate, Mockito.times(1)).getForEntity("http://abc.com/health", String.class);
+  }
 
-	@Test
-	@DisplayName("when service urls not empty rest template should be invoked")
-	public void when_rest_throw_exception_() {
+  @Test
+  @DisplayName("when service urls not empty rest template should be invoked")
+  public void when_rest_throw_exception_() {
 
-		// given
+    // given
 
-		List<ServiceHealthUrl> collection = List.of(new ServiceHealthUrl("B", "http://ab.com/health"),
-				new ServiceHealthUrl("C", "http://abc.com/health"), new ServiceHealthUrl("A", "http://a.com/health"));
+    List<ServiceHealthUrl> collection =
+        List.of(
+            new ServiceHealthUrl("B", "http://ab.com/health"),
+            new ServiceHealthUrl("C", "http://abc.com/health"),
+            new ServiceHealthUrl("A", "http://a.com/health"));
 
-		when(urlConfig.newServiceUrlList()).thenReturn(collection);
+    when(urlConfig.newServiceUrlList()).thenReturn(collection);
 
-		when(restTemplate.getForEntity("http://a.com/health", String.class))
-				.thenReturn(ResponseEntity.ok("{'status':'up'}"));
+    when(restTemplate.getForEntity("http://a.com/health", String.class))
+        .thenReturn(ResponseEntity.ok("{'status':'up'}"));
 
-		when(restTemplate.getForEntity("http://ab.com/health", String.class))
-				.thenReturn(ResponseEntity.ok("{'status':'down'}"));
+    when(restTemplate.getForEntity("http://ab.com/health", String.class))
+        .thenReturn(ResponseEntity.ok("{'status':'down'}"));
 
-		when(restTemplate.getForEntity("http://abc.com/health", String.class)).thenThrow(RestClientException.class);
+    when(restTemplate.getForEntity("http://abc.com/health", String.class))
+        .thenThrow(RestClientException.class);
 
-		Mockito.doNothing().when(notification).publish(Mockito.anyList(), Mockito.isNull());
+    Mockito.doNothing().when(notification).publish(Mockito.anyList(), Mockito.isNull());
 
-		// when
-		service.invokeHealthCheck();
+    // when
+    service.invokeHealthCheck();
 
-		// then
-		assertEquals(collection.get(0).getName(), "B");
-		assertEquals(collection.get(1).getName(), "C");
-		assertEquals(collection.get(2).getName(), "A");
+    // then
+    assertEquals(collection.get(0).getName(), "B");
+    assertEquals(collection.get(1).getName(), "C");
+    assertEquals(collection.get(2).getName(), "A");
 
-		assertEquals(collection.get(0).getStatus(), "down");
-		assertEquals(collection.get(1).getStatus(), "Exception");
-		assertEquals(collection.get(2).getStatus(), "up");
+    assertEquals(collection.get(0).getStatus(), "down");
+    assertEquals(collection.get(1).getStatus(), "Exception");
+    assertEquals(collection.get(2).getStatus(), "up");
 
-		verify(urlConfig, Mockito.times(1)).newServiceUrlList();
+    verify(urlConfig, Mockito.times(1)).newServiceUrlList();
 
-		verify(notification).publish(Mockito.anyList(), Mockito.isNull());
+    verify(notification).publish(Mockito.anyList(), Mockito.isNull());
 
-		verify(restTemplate, Mockito.times(1)).getForEntity("http://a.com/health", String.class);
-		verify(restTemplate, Mockito.times(1)).getForEntity("http://ab.com/health", String.class);
-		verify(restTemplate, Mockito.times(1)).getForEntity("http://abc.com/health", String.class);
-	}
+    verify(restTemplate, Mockito.times(1)).getForEntity("http://a.com/health", String.class);
+    verify(restTemplate, Mockito.times(1)).getForEntity("http://ab.com/health", String.class);
+    verify(restTemplate, Mockito.times(1)).getForEntity("http://abc.com/health", String.class);
+  }
 
-	@Test
-	@DisplayName("service status changed notification invoked")
-	public void when_service_status_changed_notification_invoked() {
+  @Test
+  @DisplayName("service status changed notification invoked")
+  public void when_service_status_changed_notification_invoked() {
 
-		// given
+    // given
 
-		service.setPrevious(List.of(new ServiceHealthUrl("B", "http://ab.com/health", "up", HttpStatus.OK),
-				new ServiceHealthUrl("C", "http://abc.com/health", "down", HttpStatus.OK)));
+    service.setPrevious(
+        List.of(
+            new ServiceHealthUrl("B", "http://ab.com/health", "up", HttpStatus.OK),
+            new ServiceHealthUrl("C", "http://abc.com/health", "down", HttpStatus.OK)));
 
-		List<ServiceHealthUrl> collection = List.of(new ServiceHealthUrl("B", "http://ab.com/health"),
-				new ServiceHealthUrl("C", "http://abc.com/health"), new ServiceHealthUrl("A", "http://a.com/health"));
+    List<ServiceHealthUrl> collection =
+        List.of(
+            new ServiceHealthUrl("B", "http://ab.com/health"),
+            new ServiceHealthUrl("C", "http://abc.com/health"),
+            new ServiceHealthUrl("A", "http://a.com/health"));
 
-		when(urlConfig.newServiceUrlList()).thenReturn(collection);
+    when(urlConfig.newServiceUrlList()).thenReturn(collection);
 
-		when(restTemplate.getForEntity("http://a.com/health", String.class))
-				.thenReturn(ResponseEntity.ok("{'status':'up'}"));
+    when(restTemplate.getForEntity("http://a.com/health", String.class))
+        .thenReturn(ResponseEntity.ok("{'status':'up'}"));
 
-		when(restTemplate.getForEntity("http://ab.com/health", String.class))
-				.thenReturn(ResponseEntity.ok("{'status':'up'}"));
+    when(restTemplate.getForEntity("http://ab.com/health", String.class))
+        .thenReturn(ResponseEntity.ok("{'status':'up'}"));
 
-		when(restTemplate.getForEntity("http://abc.com/health", String.class))
-				.thenReturn(ResponseEntity.ok("{'status':'up'}"));
+    when(restTemplate.getForEntity("http://abc.com/health", String.class))
+        .thenReturn(ResponseEntity.ok("{'status':'up'}"));
 
-		Mockito.doNothing().when(notification).publish(Mockito.anyList(), Mockito.anyList());
+    Mockito.doNothing().when(notification).publish(Mockito.anyList(), Mockito.anyList());
 
-		// when
-		service.invokeHealthCheck();
+    // when
+    service.invokeHealthCheck();
 
-		// then
+    // then
 
-		assertEquals(collection.get(0).getName(), "B");
-		assertEquals(collection.get(1).getName(), "C");
-		assertEquals(collection.get(2).getName(), "A");
+    assertEquals(collection.get(0).getName(), "B");
+    assertEquals(collection.get(1).getName(), "C");
+    assertEquals(collection.get(2).getName(), "A");
 
-		assertEquals(collection.get(0).getStatus(), "up");
-		assertEquals(collection.get(1).getStatus(), "up");
-		assertEquals(collection.get(2).getStatus(), "up");
+    assertEquals(collection.get(0).getStatus(), "up");
+    assertEquals(collection.get(1).getStatus(), "up");
+    assertEquals(collection.get(2).getStatus(), "up");
 
-		verify(urlConfig, Mockito.times(1)).newServiceUrlList();
+    verify(urlConfig, Mockito.times(1)).newServiceUrlList();
 
-		verify(notification).publish(Mockito.anyList(), Mockito.anyList());
+    verify(notification).publish(Mockito.anyList(), Mockito.anyList());
 
-		verify(restTemplate, Mockito.times(1)).getForEntity("http://a.com/health", String.class);
-		verify(restTemplate, Mockito.times(1)).getForEntity("http://ab.com/health", String.class);
-		verify(restTemplate, Mockito.times(1)).getForEntity("http://abc.com/health", String.class);
-	}
-
+    verify(restTemplate, Mockito.times(1)).getForEntity("http://a.com/health", String.class);
+    verify(restTemplate, Mockito.times(1)).getForEntity("http://ab.com/health", String.class);
+    verify(restTemplate, Mockito.times(1)).getForEntity("http://abc.com/health", String.class);
+  }
 }

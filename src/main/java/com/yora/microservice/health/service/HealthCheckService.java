@@ -24,71 +24,71 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class HealthCheckService {
 
-	private static final String EXCEPTION_STATUS = "Exception";
+  private static final String EXCEPTION_STATUS = "Exception";
 
-	private static final String EMPTY_BODY_STATUS = "Empty";
+  private static final String EMPTY_BODY_STATUS = "Empty";
 
-	private UrlConfig config;
+  private UrlConfig config;
 
-	private RestTemplate template;
+  private RestTemplate template;
 
-	private Notification notification;
+  private Notification notification;
 
-	@Autowired
-	public HealthCheckService(UrlConfig config, RestTemplate template, Notification notification) {
-		this.config = config;
-		this.template = template;
-		this.notification = notification;
+  @Autowired
+  public HealthCheckService(UrlConfig config, RestTemplate template, Notification notification) {
+    this.config = config;
+    this.template = template;
+    this.notification = notification;
+  }
 
-	}
+  @Value("${default.timezone:Asia/Colombo}")
+  String zoneId = "Asia/Colombo";
 
-	@Value("${default.timezone:Asia/Colombo}")
-	String zoneId = "Asia/Colombo";
+  @Value("${default.status-tag-name:status}")
+  String statusKeyName = "status";
 
-	@Value("${default.status-tag-name:status}")
-	String statusKeyName = "status";
+  @Setter private List<ServiceHealthUrl> previous;
 
-	@Setter
-	private List<ServiceHealthUrl> previous;
+  public void invokeHealthCheck() {
 
-	public void invokeHealthCheck() {
+    List<ServiceHealthUrl> serviceUrls = config.newServiceUrlList();
 
-		List<ServiceHealthUrl> serviceUrls = config.newServiceUrlList();
+    if (serviceUrls == null || serviceUrls.isEmpty()) {
+      log.error("Service url list is empty, please check your application.yml file.");
+      return;
+    }
 
-		if (serviceUrls == null || serviceUrls.isEmpty()) {
-			log.error("Service url list is empty, please check your application.yml file.");
-			return;
-		}
+    notifyIfChanged(
+        serviceUrls
+            .parallelStream()
+            .map(e -> checkHealthStatus(e))
+            .sorted((x, y) -> x.getName().compareTo(y.getName()))
+            .collect(Collectors.toList()));
+  }
 
-		notifyIfChanged(serviceUrls.parallelStream().map(e -> checkHealthStatus(e))
-				.sorted((x, y) -> x.getName().compareTo(y.getName())).collect(Collectors.toList()));
+  private void notifyIfChanged(List<ServiceHealthUrl> newList) {
+    if (previous == null || !previous.containsAll(newList)) {
+      notification.publish(newList, previous);
+      this.previous = newList;
+    }
+  }
 
-	}
+  private ServiceHealthUrl checkHealthStatus(ServiceHealthUrl status) {
+    try {
+      status.setStatus(EMPTY_BODY_STATUS);
+      status.setTimestamp(ZonedDateTime.now(ZoneId.of(zoneId)));
+      ResponseEntity<String> response = template.getForEntity(status.getUrl(), String.class);
 
-	private void notifyIfChanged(List<ServiceHealthUrl> newList) {
-		if (previous == null || !previous.containsAll(newList)) {
-			notification.publish(newList, previous);
-			this.previous = newList;
-		}
-	}
+      if (response.hasBody()) {
+        JSONObject json = new JSONObject(response.getBody());
+        status.setStatus(json.optString(statusKeyName));
+      }
+      status.setStatusCode(response.getStatusCode());
 
-	private ServiceHealthUrl checkHealthStatus(ServiceHealthUrl status) {
-		try {
-			status.setStatus(EMPTY_BODY_STATUS);
-			status.setTimestamp(ZonedDateTime.now(ZoneId.of(zoneId)));
-			ResponseEntity<String> response = template.getForEntity(status.getUrl(), String.class);
-
-			if (response.hasBody()) {
-				JSONObject json = new JSONObject(response.getBody());
-				status.setStatus(json.optString(statusKeyName));
-			}
-			status.setStatusCode(response.getStatusCode());
-
-		} catch (RestClientException | JSONException e) {
-			status.setStatus(EXCEPTION_STATUS);
-			status.setTrace(e.getMessage());
-		}
-		return status;
-	}
-
+    } catch (RestClientException | JSONException e) {
+      status.setStatus(EXCEPTION_STATUS);
+      status.setTrace(e.getMessage());
+    }
+    return status;
+  }
 }

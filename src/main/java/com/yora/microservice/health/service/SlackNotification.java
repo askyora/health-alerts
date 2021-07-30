@@ -32,86 +32,100 @@ import lombok.extern.slf4j.Slf4j;
 @ConditionalOnExpression("${notification.slack.enabled:true}")
 public class SlackNotification implements Notification {
 
-	private static final String UP = "UP";
+  private static final String UP = "UP";
 
-	private static final String DOWN = "DOWN";
+  private static final String DOWN = "DOWN";
 
-	@Value("${notification.slack.token}")
-	private String token = "";
+  @Value("${notification.slack.token}")
+  private String token = "";
 
-	@Value("${notification.slack.channel:#production_health}")
-	private String channel = "#production_health";
+  @Value("${notification.slack.channel:#production_health}")
+  private String channel = "#production_health";
 
-	@Value("${notification.slack.server-name:Production Server}")
-	private String serverName = "Production}";
+  @Value("${notification.slack.server-name:Production Server}")
+  private String serverName = "Production}";
 
-	private Slack slack = null;
+  private Slack slack = null;
 
-	@PostConstruct
-	public void init() {
-		slack = Slack.getInstance();
-	}
+  @PostConstruct
+  public void init() {
+    slack = Slack.getInstance();
+  }
 
-	@Override
-	public void publish(List<ServiceHealthUrl> newList, List<ServiceHealthUrl> previous) {
+  @Override
+  public void publish(List<ServiceHealthUrl> newList, List<ServiceHealthUrl> previous) {
 
-		try {
+    try {
 
-			MethodsClient methodsClient = slack.methods(token);
+      MethodsClient methodsClient = slack.methods(token);
 
-			String overallStatus = newList.stream().filter(e -> !e.getStatus().equalsIgnoreCase(UP)).findFirst()
-					.isPresent() ? DOWN : UP;
+      String overallStatus =
+          newList.stream().filter(e -> !e.getStatus().equalsIgnoreCase(UP)).findFirst().isPresent()
+              ? DOWN
+              : UP;
 
-			StringBuilder sb = new StringBuilder();
+      StringBuilder sb = new StringBuilder();
 
-			sb.append("*Overall Server [").append(serverName).append("] Status* : *").append(overallStatus).append("*")
-					.append("\n");
+      sb.append("*Overall Server [")
+          .append(serverName)
+          .append("] Status* : *")
+          .append(overallStatus)
+          .append("*")
+          .append("\n");
 
-			Optional<ZonedDateTime> downFromNew = newList.stream().filter(e -> !e.getStatus().equalsIgnoreCase(UP))
-					.map(e -> e.getTimestamp()).min((x, y) -> x.compareTo(y));
+      Optional<ZonedDateTime> downFromNew =
+          newList.stream()
+              .filter(e -> !e.getStatus().equalsIgnoreCase(UP))
+              .map(e -> e.getTimestamp())
+              .min((x, y) -> x.compareTo(y));
 
-			if (previous != null) {
+      if (previous != null) {
 
-				Optional<ZonedDateTime> downFromPrevious = previous.stream()
-						.filter(e -> !e.getStatus().equalsIgnoreCase(UP)).map(e -> e.getTimestamp())
-						.min((x, y) -> x.compareTo(y));
-				if (downFromPrevious.isPresent())
-					sb.append("*Sevice Down Since* : *").append(downFromPrevious.get()).append("*");
+        Optional<ZonedDateTime> downFromPrevious =
+            previous.stream()
+                .filter(e -> !e.getStatus().equalsIgnoreCase(UP))
+                .map(e -> e.getTimestamp())
+                .min((x, y) -> x.compareTo(y));
+        if (downFromPrevious.isPresent())
+          sb.append("*Sevice Down Since* : *").append(downFromPrevious.get()).append("*");
 
-			} else {
+      } else {
 
-				if (downFromNew.isPresent()) {
-					sb.append("*Sevice Down Since* : *").append(downFromNew.get()).append("*");
+        if (downFromNew.isPresent()) {
+          sb.append("*Sevice Down Since* : *").append(downFromNew.get()).append("*");
+        }
+      }
 
-				}
+      methodsClient.chatPostMessage(
+          req ->
+              req.channel(channel)
+                  .blocks(
+                      asBlocks(
+                          section(
+                              section ->
+                                  section.text(
+                                      MarkdownTextObject.builder().text(sb.toString()).build())))));
 
-			}
+      String services = newList.stream().map(e -> e.getName()).collect(Collectors.joining("\n"));
 
-			methodsClient.chatPostMessage(req -> req.channel(channel).blocks(asBlocks(
-					section(section -> section.text(MarkdownTextObject.builder().text(sb.toString()).build())))));
+      String status = newList.stream().map(e -> e.getStatus()).collect(Collectors.joining("\n"));
 
-			String services = newList.stream().map(e -> e.getName()).collect(Collectors.joining("\n"));
+      List<TextObject> list = new ArrayList<>();
 
-			String status = newList.stream().map(e -> e.getStatus()).collect(Collectors.joining("\n"));
-			
+      list.add(MarkdownTextObject.builder().text("*Service Name*").build());
+      list.add(MarkdownTextObject.builder().text("*Status*").build());
 
-			List<TextObject> list = new ArrayList<>();
+      list.add(PlainTextObject.builder().text(services).build());
+      list.add(PlainTextObject.builder().text(status).build());
 
-			list.add(MarkdownTextObject.builder().text("*Service Name*").build());
-			list.add(MarkdownTextObject.builder().text("*Status*").build());
-			
+      ChatPostMessageResponse response =
+          methodsClient.chatPostMessage(
+              req ->
+                  req.channel(channel).blocks(asBlocks(section(section -> section.fields(list)))));
 
-			list.add(PlainTextObject.builder().text(services).build());
-			list.add(PlainTextObject.builder().text(status).build());
-
-			ChatPostMessageResponse response = methodsClient.chatPostMessage(
-					req -> req.channel(channel).blocks(asBlocks(section(section -> section.fields(list)))));
-
-			log.warn(response.toString());
-		} catch (IOException | SlackApiException e) {
-			log.error(e.getMessage(), e);
-		}
-
-	}
-
+      log.warn(response.toString());
+    } catch (IOException | SlackApiException e) {
+      log.error(e.getMessage(), e);
+    }
+  }
 }

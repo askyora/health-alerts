@@ -16,9 +16,9 @@ import lombok.Data;
 @ConfigurationProperties(prefix = "services")
 public class UrlConfig {
 
-	private List<ServiceHealthUrl> list;
+  private List<ServiceHealthUrl> list;
 
-	public List<ServiceHealthUrl> newServiceUrlList() {
-		return list.stream().map(e -> SerializationUtils.clone(e)).collect(Collectors.toList());
-	}
+  public List<ServiceHealthUrl> newServiceUrlList() {
+    return list.stream().map(e -> SerializationUtils.clone(e)).collect(Collectors.toList());
+  }
 }
