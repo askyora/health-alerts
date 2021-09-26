@@ -4,7 +4,6 @@ version: 2.1
 
 jobs:
   # Below is the definition of your job to build and test your app, you can rename and customize it as you want.
-  
   build-and-test:
     # These next lines define a Docker executor: https://circleci.com/docs/2.0/executor-types/
     # You can specify an image from Dockerhub or use one of our Convenience Images from CircleCI's Developer Hub.
@@ -16,27 +15,35 @@ jobs:
           username: $DOCKERHUB_LOGIN
           password: $DOCKERHUB_PASSWORD
     steps:
-    - checkout
-    - run:
+      - checkout
+      - run:
           name: Build
           command: mvn -B clean package
       # ... steps for building/testing app ...
-          
-    - setup_remote_docker:
+      - setup_remote_docker:
           version: 19.03.13
           docker_layer_caching: false
-
-      # build and push Docker image
-    - run: |
-        TAG=0.1.$CIRCLE_BUILD_NUM
-        docker build -t yohanshanaka81/common:health-alerts-$TAG .
-        echo $DOCKERHUB_PASSWORD | docker login -u $DOCKERHUB_LOGIN --password-stdin
-        docker push yohanshanaka81/common:health-alerts-$TAG
+        # build and push Docker image
+      - run: |
+          TAG=0.1.$CIRCLE_BUILD_NUM
+          docker build -t yohanshanaka81/common:health-alerts-$TAG .
+          echo $DOCKERHUB_PASSWORD | docker login -u $DOCKERHUB_LOGIN --password-stdin
+          docker push yohanshanaka81/common:health-alerts-$TAG
 workflows:
   # Below is the definition of your workflow.
   # Inside the workflow, you provide the jobs you want to run, e.g this workflow runs the build-and-test job above.
   # CircleCI will run this workflow on every commit.
   # For more details on extending your workflow, see the configuration docs: https://circleci.com/docs/2.0/configuration-reference/#workflows
-  sample: 
+  sample:
     jobs:
       - build-and-test
+  daily-workflow:
+    jobs:
+      - build-and-test
+    triggers:
+      - schedule:
+          cron: 0 0 * * *
+          filters:
+            branches:
+              only:
+                - main
